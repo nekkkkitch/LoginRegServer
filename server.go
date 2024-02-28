@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"html/template"
 	"net/http"
@@ -14,22 +13,44 @@ type User struct {
 	Password string `json:"Password"`
 }
 
+func main() {
+	fs := http.FileServer(http.Dir("resources"))
+	http.Handle("/resources/", http.StripPrefix("/resources", fs))
+	http.HandleFunc("/", MainPage)
+	http.HandleFunc("/login/", LoginPage)
+	http.HandleFunc("/login_user", LoginUser)
+	http.ListenAndServe("localhost:8080", nil)
+}
+
+// http pages
 func MainPage(w http.ResponseWriter, r *http.Request) {
 	var users = GetUsers()
 	tmpl := template.Must(template.ParseFiles("templates/MainPage.html"))
 	tmpl.Execute(w, users)
 }
-func Login(w http.ResponseWriter, r *http.Request) {
+
+var loginError string
+
+func LoginPage(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles("templates/LoginPage.html"))
-	user := User{
-		ID:       0,
-		Username: r.FormValue("Username"),
-		Password: r.FormValue("Password"),
-	}
-	tmpl.Execute(w, user)
-	fmt.Println(user)
-	//InsertUser(&user)
+	tmpl.Execute(w, loginError)
+	loginError = "abc"
 }
+
+// http func
+func LoginUser(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	var user = User{0, r.Form["Username"][0], r.Form["Password"][0]}
+	if !CheckForSameLoginUser(user.Username) {
+		InsertUser(user)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	} else {
+		http.Redirect(w, r, "/login/", http.StatusSeeOther)
+		loginError = "User with that login already exists :("
+	}
+}
+
+// sql requests
 func GetUsers() []User {
 	db, err := sql.Open("mysql", "root:JonnekJuar4002@tcp(127.0.0.1:3306)/mydb")
 	if err != nil {
@@ -48,7 +69,18 @@ func GetUsers() []User {
 	}
 	return result
 }
-func InsertUser(u *User) {
+func CheckForSameLoginUser(name string) bool {
+	db, err := sql.Open("mysql", "root:JonnekJuar4002@tcp(127.0.0.1:3306)/mydb")
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+	row := db.QueryRow("select exists(select * from Users where Username = ?)", name)
+	exist := false
+	row.Scan(&exist)
+	return exist
+}
+func InsertUser(u User) {
 	db, err := sql.Open("mysql", "root:JonnekJuar4002@tcp(127.0.0.1:3306)/mydb")
 	if err != nil {
 		panic(err.Error())
@@ -58,11 +90,4 @@ func InsertUser(u *User) {
 	if err != nil {
 		panic(err.Error())
 	}
-}
-func main() {
-	fs := http.FileServer(http.Dir("resources"))
-	http.Handle("/resources/", http.StripPrefix("/resources", fs))
-	http.HandleFunc("/", MainPage)
-	http.HandleFunc("/login/", Login)
-	http.ListenAndServe("localhost:8080", nil)
 }
