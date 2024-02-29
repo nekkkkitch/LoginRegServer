@@ -4,11 +4,11 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>Login</title>
+        <title>SignUp</title>
         <link rel="stylesheet" href="../resources/main.css">
     </head>
     <body>
-        <form name="login_user" action="/login_user" method="post">
+        <form name="signup_user" action="/signup_user" method="post">
         <label for="Username">Username:</label>
         <input type="text" id="Username" name="Username" placeholder="Username...">
         <br>
@@ -17,6 +17,6 @@
         <br>
         <button input type="submit" name="submit" value="Send">Try to login/register</button>
         </form>
-        <label for="Result">{{.}}</label>
+        <label for="Result">{{}}</label>
     </body>
 </html>
