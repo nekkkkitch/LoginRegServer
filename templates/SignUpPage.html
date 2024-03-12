@@ -8,15 +8,19 @@
         <link rel="stylesheet" href="../resources/main.css">
     </head>
     <body>
+        <a href="/"><button>Hазад</button></a>
         <form name="signup_user" action="/signup_user" method="post">
+        <label for="Login">Login:</label>
+        <input type="text" id="Login" name="Login" placeholder="Login...">
+        <br>
         <label for="Username">Username:</label>
         <input type="text" id="Username" name="Username" placeholder="Username...">
         <br>
         <label for="Password">Password:</label>
         <input type="text" id="Password" name="Password" placeholder="Password...">
         <br>
-        <button input type="submit" name="submit" value="Send">Try to login/register</button>
+        <button input type="submit" name="submit" value="Send">Register</button>
         </form>
-        <label for="Result">{{}}</label>
+        <label for="Result">{{.}}</label>
     </body>
 </html>

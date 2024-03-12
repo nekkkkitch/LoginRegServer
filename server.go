@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"html/template"
 	"net/http"
@@ -38,23 +37,21 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 var signUpError string
 
 func SignUpPage(w http.ResponseWriter, r *http.Request) {
-	signUpError = ""
 	tmpl = template.Must(template.ParseFiles("templates/SignUpPage.html"))
-	tmpl.Execute(w, SignUpUser)
 	tmpl.Execute(w, signUpError)
+	signUpError = ""
 }
 
 // http func
 func SignUpUser(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("abc")
 	r.ParseForm()
-	var user = User{0, r.Form["Username"][0], r.Form["Password"][0]}
+	var user = User{0, r.Form["Login"][0], r.Form["Username"][0], r.Form["Password"][0]}
 	if !CheckForSameLoginUser(user.Username) {
 		InsertUser(user)
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	} else {
 		signUpError = "User with that login already exists :("
-		tmpl.Execute(w, signUpError)
+		http.Redirect(w, r, "/signup", http.StatusSeeOther)
 	}
 }
 

@@ -1,9 +1,13 @@
 package main
 
-import "database/sql"
+import (
+	"database/sql"
+	"golang.org/x/crypto/bcrypt"
+)
 
 type User struct {
 	ID       int    `json:"ID"`
+	Login    string `json:"Login"`
 	Username string `json:"Username"`
 	Password string `json:"Password"`
 }
@@ -18,7 +22,7 @@ func GetUsers() []User {
 	var result = []User{}
 	for data.Next() {
 		var user User
-		err := data.Scan(&user.ID, &user.Username, &user.Password)
+		err := data.Scan(&user.ID, &user.Login, &user.Username, &user.Password)
 		if err != nil {
 			panic(err.Error())
 		}
@@ -32,7 +36,7 @@ func CheckForSameLoginUser(name string) bool {
 		panic(err.Error())
 	}
 	defer db.Close()
-	row := db.QueryRow("select exists(select * from Users where Username = ?)", name)
+	row := db.QueryRow("select exists(select * from Users where Login = ?)", name)
 	exist := false
 	row.Scan(&exist)
 	return exist
@@ -43,8 +47,19 @@ func InsertUser(u User) {
 		panic(err.Error())
 	}
 	defer db.Close()
-	_, err = db.Exec("insert into users(Username, Password) values (?, ?)", u.Username, u.Password)
+	hashedPassword, _ := HashPassword(u.Password)
+	_, err = db.Exec("insert into users(Login, Username, Password) values (?, ?, ?)", u.Login, u.Username, hashedPassword)
 	if err != nil {
 		panic(err.Error())
 	}
+}
+
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
+}
+
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
